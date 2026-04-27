@@ -1,39 +1,82 @@
-﻿def judge_session(scenario: dict) -> dict:
-    turns = scenario.get("turns", [])
-    initial_state = scenario.get("initial_state", {})
+﻿def get_nested(d: dict, path: str):
+    cur = d
+    for part in path.split("."):
+        if not isinstance(cur, dict) or part not in cur:
+            return None
+        cur = cur[part]
+    return cur
+
+
+def judge_turn(expected_checks: dict, current_state: dict) -> dict:
+    passed = 0
+    total = 0
+    details = []
+
+    for key, expected in expected_checks.items():
+        total += 1
+
+        if key.endswith("_contains"):
+            real_key = key.replace("_contains", "")
+            actual = get_nested(current_state, real_key)
+            ok = isinstance(actual, list) and all(x in actual for x in expected)
+
+        elif key.endswith("_in"):
+            real_key = key.replace("_in", "")
+            actual = get_nested(current_state, real_key)
+            ok = actual in expected
+
+        else:
+            actual = get_nested(current_state, key)
+            ok = actual == expected
+
+        if ok:
+            passed += 1
+
+        details.append({
+            "check": key,
+            "expected": expected,
+            "actual": actual,
+            "ok": ok
+        })
+
+    return {
+        "passed": passed,
+        "total": total,
+        "details": details
+    }
+
+
+def judge_session(run_result: dict) -> dict:
+    turns = run_result.get("turn_results", [])
+
+    total_checks = 0
+    total_passed = 0
+    per_turn = []
+
+    for t in turns:
+        expected_checks = t.get("expected_checks", {})
+        current_state = t.get("current_state", {})
+        judged = judge_turn(expected_checks, current_state)
+
+        total_checks += judged["total"]
+        total_passed += judged["passed"]
+
+        per_turn.append({
+            "turn_id": t["turn_id"],
+            "passed": judged["passed"],
+            "total": judged["total"],
+            "details": judged["details"]
+        })
 
     state_consistency = 0
+    if total_checks > 0:
+        state_consistency = round(30 * total_passed / total_checks)
+
+    # 暫時其他分數先留空殼
     long_memory = 0
     reaction_coherence = 0
     tension_retention = 0
     sensory_rendering = 0
-
-    # Very simple rule-based placeholder scoring
-    if initial_state.get("scene"):
-        state_consistency += 10
-    if initial_state.get("characters"):
-        state_consistency += 10
-    if initial_state.get("tension"):
-        state_consistency += 10
-
-    if initial_state.get("memory"):
-        long_memory += 10
-    if len(turns) >= 2:
-        long_memory += 5
-
-    if initial_state.get("characters", {}).get("other_side"):
-        reaction_coherence += 10
-    if len(turns) >= 2:
-        reaction_coherence += 5
-
-    open_loops = initial_state.get("tension", {}).get("open_loops", [])
-    if len(open_loops) > 0:
-        tension_retention += 10
-    if len(turns) >= 2:
-        tension_retention += 5
-
-    # Placeholder for now
-    sensory_rendering = 2
 
     total = (
         state_consistency
@@ -44,10 +87,11 @@
     )
 
     return {
-        "state_consistency": min(state_consistency, 30),
-        "long_memory": min(long_memory, 25),
-        "reaction_coherence": min(reaction_coherence, 20),
-        "tension_retention": min(tension_retention, 15),
-        "sensory_rendering": min(sensory_rendering, 10),
-        "total": min(total, 100),
+        "state_consistency": state_consistency,
+        "long_memory": long_memory,
+        "reaction_coherence": reaction_coherence,
+        "tension_retention": tension_retention,
+        "sensory_rendering": sensory_rendering,
+        "total": total,
+        "turn_breakdown": per_turn
     }

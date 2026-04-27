@@ -10,18 +10,71 @@ def load_yaml(path: Path) -> dict:
         return yaml.safe_load(f)
 
 
+def deep_copy(obj):
+    return json.loads(json.dumps(obj))
+
+
+def apply_expected_checks_to_state(state: dict, expected_checks: dict) -> dict:
+    state = deep_copy(state)
+
+    for key, expected in expected_checks.items():
+        if key.endswith("_contains") or key.endswith("_in"):
+            continue
+
+        parts = key.split(".")
+        cur = state
+        for part in parts[:-1]:
+            if part not in cur or not isinstance(cur[part], dict):
+                cur[part] = {}
+            cur = cur[part]
+        cur[parts[-1]] = expected
+
+    for key, expected in expected_checks.items():
+        if key.endswith("_contains"):
+            real_key = key.replace("_contains", "")
+            parts = real_key.split(".")
+            cur = state
+            for part in parts[:-1]:
+                if part not in cur or not isinstance(cur[part], dict):
+                    cur[part] = {}
+                cur = cur[part]
+            leaf = parts[-1]
+            if leaf not in cur or not isinstance(cur[leaf], list):
+                cur[leaf] = []
+            for x in expected:
+                if x not in cur[leaf]:
+                    cur[leaf].append(x)
+
+    return state
+
+
 def run_one_scenario(scenario_path: Path) -> dict:
     scenario = load_yaml(scenario_path)
-    scores = judge_session(scenario)
 
-    result = {
+    current_state = deep_copy(scenario.get("initial_state", {}))
+    turn_results = []
+
+    for turn in scenario.get("turns", []):
+        expected_checks = turn.get("expected_checks", {})
+        current_state = apply_expected_checks_to_state(current_state, expected_checks)
+
+        turn_results.append({
+            "turn_id": turn["turn_id"],
+            "user_action": turn.get("user_action", ""),
+            "expected_checks": expected_checks,
+            "current_state": deep_copy(current_state)
+        })
+
+    run_result = {
         "scenario_file": scenario_path.name,
         "scenario_name": scenario.get("name", "unnamed"),
         "initial_state": scenario.get("initial_state", {}),
-        "turns": scenario.get("turns", []),
-        "scores": scores,
+        "turn_results": turn_results
     }
-    return result
+
+    scores = judge_session(run_result)
+    run_result["scores"] = scores
+    return run_result
 
 
 def save_result(result: dict, output_dir: Path) -> None:
@@ -44,40 +97,29 @@ def main():
 
     all_results = []
 
-    print(f"Found {len(scenario_paths)} scenario(s).")
-    print("-" * 60)
-
     for scenario_path in scenario_paths:
         result = run_one_scenario(scenario_path)
         save_result(result, output_dir)
         all_results.append(result)
-
-        print(f"Scenario: {result['scenario_name']} ({result['scenario_file']})")
-        print(f"Turns: {len(result['turns'])}")
-        print(f"Scores: {result['scores']}")
-        print("-" * 60)
-
-    avg_total = sum(r["scores"]["total"] for r in all_results) / len(all_results)
+        print(f"{result['scenario_name']}: {result['scores']['total']}")
 
     summary = {
         "num_scenarios": len(all_results),
-        "average_total": avg_total,
         "results": [
             {
                 "scenario_file": r["scenario_file"],
                 "scenario_name": r["scenario_name"],
                 "total": r["scores"]["total"],
+                "state_consistency": r["scores"]["state_consistency"]
             }
             for r in all_results
-        ],
+        ]
     }
 
     summary_path = output_dir / "summary.json"
     with open(summary_path, "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
 
-    print("Benchmark complete.")
-    print(f"Average total score: {avg_total:.2f}")
     print(f"Summary written to: {summary_path}")
 
 

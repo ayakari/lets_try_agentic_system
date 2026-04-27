@@ -27,5 +27,17 @@ initial_state:
 turns:
   - turn_id: 1
     user_action: "Start conversation."
+    expected_checks:
+      scene.phase: setup
+      tension.open_loops_contains:
+        - unknown_motive
+
   - turn_id: 2
     user_action: "Probe for a reaction."
+    expected_checks:
+      scene.phase: probe
+      characters.other_side.emotion_in:
+        - guarded
+        - tense
+      tension.open_loops_contains:
+        - unknown_motive
