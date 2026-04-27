@@ -1,0 +1,37 @@
+﻿name: scenario_002
+initial_state:
+  scene:
+    phase: probe
+    location: hallway
+    distance: close
+    recent_events:
+      - brief_eye_contact
+  characters:
+    user_side:
+      intent: test_response
+      emotion: curious
+      initiative: 0.5
+    other_side:
+      intent: conceal
+      emotion: tense
+      initiative: 0.5
+  memory:
+    stable_facts:
+      - they_have_met_before
+    recent_facts:
+      - atmosphere_is_uncertain
+    updated_facts: []
+  tension:
+    open_loops:
+      - hidden_agenda
+      - emotional_shift
+    pace: 0.5
+    novelty_budget: 0.8
+
+turns:
+  - turn_id: 1
+    user_action: "Approach carefully and ask a simple question."
+  - turn_id: 2
+    user_action: "Notice the hesitation and press slightly."
+  - turn_id: 3
+    user_action: "Change topic suddenly to test consistency."
