@@ -1,0 +1,62 @@
+﻿{
+  "project_name": "Interactive Benchmark Prototype",
+  "project_stage": "benchmark_skeleton",
+  "current_focus": "make the benchmark pipeline more meaningful and reproducible",
+  "completed": [
+    "git repo initialized",
+    "github repo created and pushed",
+    "project scaffold created",
+    "README added",
+    "benchmark_spec added",
+    "state schema added",
+    "event schema added",
+    "placeholder judge added",
+    "benchmark runner added",
+    "scenario_001 added",
+    "scenario_002 added"
+  ],
+  "not_done": [
+    "real planner",
+    "real solver",
+    "real state update logic",
+    "event-based memory manager",
+    "llm judge",
+    "ablation runner",
+    "frontend",
+    "runpod workflow script"
+  ],
+  "important_decisions": [
+    "backend first frontend later",
+    "benchmark first product shell later",
+    "canonical state is the single source of truth",
+    "runpod is an execution node not the source of truth",
+    "text-adventure frontend is a likely later direction",
+    "kobold-like frontend can be used later as a shell only"
+  ],
+  "important_files": [
+    "README.md",
+    "HANDOFF.md",
+    "benchmark_spec.md",
+    "src/state_schema.py",
+    "src/event_schema.py",
+    "src/judge.py",
+    "src/run_benchmark.py",
+    "scenarios/scenario_001.yaml",
+    "scenarios/scenario_002.yaml",
+    "outputs/summary.json"
+  ],
+  "current_weak_points": [
+    "judge is placeholder quality",
+    "too few scenarios",
+    "state tracking not really enforced yet",
+    "memory evaluation is shallow",
+    "tension evaluation is shallow"
+  ],
+  "next_steps": [
+    "improve judge.py",
+    "add scenario_003.yaml",
+    "add richer output logs",
+    "add baseline modes",
+    "add first real state update logic"
+  ]
+}
