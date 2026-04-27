@@ -3,6 +3,7 @@ import json
 import yaml
 
 from judge import judge_session
+from state_tracker import StateTracker
 
 
 def load_yaml(path: Path) -> dict:
@@ -10,59 +11,21 @@ def load_yaml(path: Path) -> dict:
         return yaml.safe_load(f)
 
 
-def deep_copy(obj):
-    return json.loads(json.dumps(obj))
-
-
-def apply_expected_checks_to_state(state: dict, expected_checks: dict) -> dict:
-    state = deep_copy(state)
-
-    for key, expected in expected_checks.items():
-        if key.endswith("_contains") or key.endswith("_in"):
-            continue
-
-        parts = key.split(".")
-        cur = state
-        for part in parts[:-1]:
-            if part not in cur or not isinstance(cur[part], dict):
-                cur[part] = {}
-            cur = cur[part]
-        cur[parts[-1]] = expected
-
-    for key, expected in expected_checks.items():
-        if key.endswith("_contains"):
-            real_key = key.replace("_contains", "")
-            parts = real_key.split(".")
-            cur = state
-            for part in parts[:-1]:
-                if part not in cur or not isinstance(cur[part], dict):
-                    cur[part] = {}
-                cur = cur[part]
-            leaf = parts[-1]
-            if leaf not in cur or not isinstance(cur[leaf], list):
-                cur[leaf] = []
-            for x in expected:
-                if x not in cur[leaf]:
-                    cur[leaf].append(x)
-
-    return state
-
-
 def run_one_scenario(scenario_path: Path) -> dict:
     scenario = load_yaml(scenario_path)
 
-    current_state = deep_copy(scenario.get("initial_state", {}))
+    tracker = StateTracker(scenario.get("initial_state", {}))
     turn_results = []
 
     for turn in scenario.get("turns", []):
+        current_state = tracker.apply_user_action(turn.get("user_action", ""))
         expected_checks = turn.get("expected_checks", {})
-        current_state = apply_expected_checks_to_state(current_state, expected_checks)
 
         turn_results.append({
             "turn_id": turn["turn_id"],
             "user_action": turn.get("user_action", ""),
             "expected_checks": expected_checks,
-            "current_state": deep_copy(current_state)
+            "current_state": current_state
         })
 
     run_result = {
