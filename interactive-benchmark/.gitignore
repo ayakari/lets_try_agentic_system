@@ -1,0 +1,7 @@
+﻿outputs/
+models/
+data/
+checkpoints/
+__pycache__/
+.venv/
+*.pyc

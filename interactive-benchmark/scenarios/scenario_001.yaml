@@ -1,0 +1,31 @@
+﻿name: scenario_001
+initial_state:
+  scene:
+    phase: setup
+    location: room
+    distance: medium
+    recent_events: []
+  characters:
+    user_side:
+      intent: explore
+      emotion: calm
+      initiative: 0.4
+    other_side:
+      intent: observe
+      emotion: guarded
+      initiative: 0.6
+  memory:
+    stable_facts: []
+    recent_facts: []
+    updated_facts: []
+  tension:
+    open_loops:
+      - unknown_motive
+    pace: 0.2
+    novelty_budget: 1.0
+
+turns:
+  - turn_id: 1
+    user_action: "Start conversation."
+  - turn_id: 2
+    user_action: "Probe for a reaction."
