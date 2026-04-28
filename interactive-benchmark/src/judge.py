@@ -62,7 +62,7 @@ def score_bucket(details: list, category: str, max_score: int) -> int:
     return round(max_score * passed / total)
 
 
-def judge_product_v0(run_result: dict) -> dict:
+def collect_details(run_result: dict) -> tuple[list, list]:
     turns = run_result.get("turn_results", [])
     all_details = []
     per_turn = []
@@ -77,6 +77,12 @@ def judge_product_v0(run_result: dict) -> dict:
             "turn_id": t["turn_id"],
             "details": details
         })
+
+    return all_details, per_turn
+
+
+def judge_product_v0(run_result: dict) -> dict:
+    all_details, per_turn = collect_details(run_result)
 
     state_consistency = score_bucket(all_details, "state_consistency", 30)
     long_memory = score_bucket(all_details, "long_memory", 25)
@@ -105,9 +111,20 @@ def judge_product_v0(run_result: dict) -> dict:
 
 
 def judge_public_longmem(run_result: dict) -> dict:
-    base = judge_product_v0(run_result)
-    base["profile"] = "public_longmem"
-    return base
+    all_details, per_turn = collect_details(run_result)
+
+    long_memory = score_bucket(all_details, "long_memory", 25)
+
+    return {
+        "profile": "public_longmem",
+        "state_consistency": 0,
+        "long_memory": long_memory,
+        "reaction_coherence": 0,
+        "tension_retention": 0,
+        "sensory_rendering": 0,
+        "total": long_memory,
+        "turn_breakdown": per_turn
+    }
 
 
 def judge_session(run_result: dict, profile: str = "product_v0") -> dict:

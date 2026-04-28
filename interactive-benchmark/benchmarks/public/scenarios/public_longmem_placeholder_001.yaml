@@ -1,0 +1,57 @@
+﻿name: public_longmem_placeholder_001
+initial_state:
+  scene:
+    phase: setup
+    location: study
+    distance: medium
+    recent_events: []
+  characters:
+    user_side:
+      intent: establish_memory
+      emotion: calm
+      initiative: 0.5
+    other_side:
+      intent: remember
+      emotion: neutral
+      initiative: 0.5
+  memory:
+    stable_facts: []
+    recent_facts: []
+    updated_facts: []
+  tension:
+    open_loops: []
+    pace: 0.1
+    novelty_budget: 1.0
+
+turns:
+  - turn_id: 1
+    user_action: "My name is Akira."
+    expected_checks:
+      memory.stable_facts_contains:
+        - name=akira
+
+  - turn_id: 2
+    user_action: "I prefer tea. Remember that."
+    expected_checks:
+      memory.stable_facts_contains:
+        - pref=tea
+      memory.recent_facts_contains:
+        - explicit_memory_request
+
+  - turn_id: 3
+    user_action: "Actually I prefer coffee."
+    expected_checks:
+      memory.stable_facts_contains:
+        - pref=coffee
+      memory.stable_facts_not_contains:
+        - pref=tea
+      memory.updated_facts_contains:
+        - pref_updated_to_coffee
+
+  - turn_id: 4
+    user_action: "What do I prefer?"
+    expected_checks:
+      memory.stable_facts_contains:
+        - pref=coffee
+      memory.recent_facts_contains:
+        - preference_query
