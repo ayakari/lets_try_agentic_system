@@ -1,9 +1,11 @@
 ﻿from pathlib import Path
 import json
 import yaml
+import argparse
 
 from judge import judge_session
 from state_tracker import StateTracker
+from benchmark_loader import resolve_scenario_paths
 
 
 def load_yaml(path: Path) -> dict:
@@ -30,6 +32,7 @@ def run_one_scenario(scenario_path: Path) -> dict:
 
     run_result = {
         "scenario_file": scenario_path.name,
+        "scenario_path": str(scenario_path),
         "scenario_name": scenario.get("name", "unnamed"),
         "initial_state": scenario.get("initial_state", {}),
         "turn_results": turn_results
@@ -47,15 +50,30 @@ def save_result(result: dict, output_dir: Path) -> None:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--suite", default="product", choices=["product", "public"])
+    parser.add_argument("--scenario-dir", default=None)
+    parser.add_argument("--scenario", default=None)
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+
     project_root = Path(__file__).resolve().parent.parent
-    scenario_dir = project_root / "benchmarks" / "product" / "scenarios"
     output_dir = project_root / "outputs"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    scenario_paths = sorted(scenario_dir.glob("*.yaml"))
+    scenario_paths = resolve_scenario_paths(
+        project_root=project_root,
+        suite=args.suite,
+        scenario_dir=args.scenario_dir,
+        scenario=args.scenario
+    )
+
     if not scenario_paths:
-        print(f"No scenario files found in: {scenario_dir}")
+        print("No scenario files found.")
         return
 
     all_results = []
@@ -67,6 +85,7 @@ def main():
         print(f"{result['scenario_name']}: {result['scores']['total']}")
 
     summary = {
+        "suite": args.suite,
         "num_scenarios": len(all_results),
         "results": [
             {
