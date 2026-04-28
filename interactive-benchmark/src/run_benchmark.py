@@ -13,7 +13,7 @@ def load_yaml(path: Path) -> dict:
         return yaml.safe_load(f)
 
 
-def run_one_scenario(scenario_path: Path) -> dict:
+def run_one_scenario(scenario_path: Path, profile: str) -> dict:
     scenario = load_yaml(scenario_path)
 
     tracker = StateTracker(scenario.get("initial_state", {}))
@@ -38,7 +38,7 @@ def run_one_scenario(scenario_path: Path) -> dict:
         "turn_results": turn_results
     }
 
-    scores = judge_session(run_result)
+    scores = judge_session(run_result, profile=profile)
     run_result["scores"] = scores
     return run_result
 
@@ -53,6 +53,7 @@ def save_result(result: dict, output_dir: Path) -> None:
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--suite", default="product", choices=["product", "public"])
+    parser.add_argument("--profile", default="product_v0")
     parser.add_argument("--scenario-dir", default=None)
     parser.add_argument("--scenario", default=None)
     return parser.parse_args()
@@ -79,13 +80,14 @@ def main():
     all_results = []
 
     for scenario_path in scenario_paths:
-        result = run_one_scenario(scenario_path)
+        result = run_one_scenario(scenario_path, profile=args.profile)
         save_result(result, output_dir)
         all_results.append(result)
-        print(f"{result['scenario_name']}: {result['scores']['total']}")
+        print(f"{result['scenario_name']}: {result['scores']['total']} ({result['scores']['profile']})")
 
     summary = {
         "suite": args.suite,
+        "profile": args.profile,
         "num_scenarios": len(all_results),
         "results": [
             {
@@ -101,7 +103,7 @@ def main():
         ]
     }
 
-    summary_path = output_dir / "summary.json"
+    summary_path = output_dir / f"summary_{args.suite}_{args.profile}.json"
     with open(summary_path, "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
 
