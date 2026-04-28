@@ -49,13 +49,13 @@ def save_result(result: dict, output_dir: Path) -> None:
 
 def main():
     project_root = Path(__file__).resolve().parent.parent
-    scenario_dir = project_root / "scenarios"
+    scenario_dir = project_root / "benchmarks" / "product" / "scenarios"
     output_dir = project_root / "outputs"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     scenario_paths = sorted(scenario_dir.glob("*.yaml"))
     if not scenario_paths:
-        print("No scenario files found.")
+        print(f"No scenario files found in: {scenario_dir}")
         return
 
     all_results = []
@@ -73,7 +73,10 @@ def main():
                 "scenario_file": r["scenario_file"],
                 "scenario_name": r["scenario_name"],
                 "total": r["scores"]["total"],
-                "state_consistency": r["scores"]["state_consistency"]
+                "state_consistency": r["scores"]["state_consistency"],
+                "long_memory": r["scores"]["long_memory"],
+                "reaction_coherence": r["scores"]["reaction_coherence"],
+                "tension_retention": r["scores"]["tension_retention"]
             }
             for r in all_results
         ]
