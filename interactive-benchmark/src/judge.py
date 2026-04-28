@@ -127,10 +127,33 @@ def judge_public_longmem(run_result: dict) -> dict:
     }
 
 
+def judge_public_constory(run_result: dict) -> dict:
+    all_details, per_turn = collect_details(run_result)
+
+    state_consistency = score_bucket(all_details, "state_consistency", 30)
+    reaction_coherence = score_bucket(all_details, "reaction_coherence", 20)
+    tension_retention = score_bucket(all_details, "tension_retention", 15)
+
+    total = state_consistency + reaction_coherence + tension_retention
+
+    return {
+        "profile": "public_constory",
+        "state_consistency": state_consistency,
+        "long_memory": 0,
+        "reaction_coherence": reaction_coherence,
+        "tension_retention": tension_retention,
+        "sensory_rendering": 0,
+        "total": total,
+        "turn_breakdown": per_turn
+    }
+
+
 def judge_session(run_result: dict, profile: str = "product_v0") -> dict:
     if profile == "product_v0":
         return judge_product_v0(run_result)
     if profile == "public_longmem":
         return judge_public_longmem(run_result)
+    if profile == "public_constory":
+        return judge_public_constory(run_result)
 
     raise ValueError(f"Unknown judge profile: {profile}")

@@ -1,0 +1,63 @@
+﻿name: public_constory_placeholder_001
+initial_state:
+  scene:
+    phase: setup
+    location: corridor
+    distance: medium
+    recent_events: []
+  characters:
+    user_side:
+      intent: probe
+      emotion: calm
+      initiative: 0.5
+    other_side:
+      intent: observe
+      emotion: guarded
+      initiative: 0.5
+  memory:
+    stable_facts: []
+    recent_facts: []
+    updated_facts: []
+  tension:
+    open_loops:
+      - unknown_motive
+    pace: 0.2
+    novelty_budget: 1.0
+
+turns:
+  - turn_id: 1
+    user_action: "Probe for a reaction."
+    expected_checks:
+      scene.phase: probe
+      characters.other_side.emotion_in:
+        - guarded
+      tension.open_loops_contains:
+        - unknown_motive
+
+  - turn_id: 2
+    user_action: "Step closer."
+    expected_checks:
+      scene.distance: close
+      characters.other_side.emotion_in:
+        - alert
+      tension.open_loops_contains:
+        - distance_shift
+
+  - turn_id: 3
+    user_action: "Wait silently."
+    expected_checks:
+      characters.other_side.emotion_in:
+        - uneasy
+      characters.other_side.initiative: 0.65
+      tension.open_loops_contains:
+        - silence_pressure
+
+  - turn_id: 4
+    user_action: "Sudden accusation."
+    expected_checks:
+      scene.phase: pivot
+      characters.other_side.emotion_in:
+        - defensive
+      characters.user_side.initiative: 0.75
+      tension.open_loops_contains:
+        - trust_drop
