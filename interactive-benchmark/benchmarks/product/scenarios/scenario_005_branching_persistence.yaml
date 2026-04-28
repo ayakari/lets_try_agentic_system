@@ -1,0 +1,66 @@
+﻿name: scenario_005_branching_persistence
+initial_state:
+  scene:
+    phase: setup
+    location: crossroads
+    distance: medium
+    recent_events: []
+  characters:
+    user_side:
+      intent: choose_path
+      emotion: calm
+      initiative: 0.5
+    other_side:
+      intent: observe
+      emotion: neutral
+      initiative: 0.5
+  memory:
+    stable_facts: []
+    recent_facts: []
+    updated_facts: []
+  tension:
+    open_loops: []
+    pace: 0.2
+    novelty_budget: 1.0
+
+turns:
+  - turn_id: 1
+    user_action: "Choose left path."
+    expected_checks:
+      scene.location: left_path
+      scene.phase: branch_left
+      memory.stable_facts_contains:
+        - branch=left
+      memory.stable_facts_not_contains:
+        - branch=right
+      tension.open_loops_contains:
+        - left_path_mystery
+
+  - turn_id: 2
+    user_action: "Inspect the marked door."
+    expected_checks:
+      scene.location: left_path
+      memory.stable_facts_contains:
+        - branch=left
+      scene.recent_events_contains:
+        - left_door_inspected
+
+  - turn_id: 3
+    user_action: "Probe for a reaction."
+    expected_checks:
+      scene.location: left_path
+      memory.stable_facts_contains:
+        - branch=left
+      characters.other_side.emotion_in:
+        - guarded
+
+  - turn_id: 4
+    user_action: "Wait silently."
+    expected_checks:
+      scene.location: left_path
+      memory.stable_facts_contains:
+        - branch=left
+      characters.other_side.emotion_in:
+        - uneasy
+      tension.open_loops_contains:
+        - silence_pressure
